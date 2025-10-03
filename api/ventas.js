@@ -20,6 +20,8 @@ export default async function handler(req, res) {
 
         // Llamar a la API original
         const apiUrl = `https://back-back9.realvirtual.com.mx/ventas-vendedores/?empresa=1&fecha_desde=${mes}-01&fecha_hasta=${mes}-30`;
+        console.log('🔗 Llamando a API:', apiUrl);
+        
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
@@ -27,92 +29,14 @@ export default async function handler(req, res) {
         }
 
         const data = await response.json();
-        console.log('🔍 Estructura de data.data:', JSON.stringify(data.data).substring(0, 200) + '...');
-        console.log('🔍 Es array data.data?', Array.isArray(data.data));
-        console.log('🔍 Propiedades de data.data:', Object.keys(data.data || {}));
+        console.log('✅ Datos recibidos de API original');
         
-        if (!data.success || !data.data) {
+        if (!data.success || !data.data || !data.data.vendedores) {
             throw new Error('Formato de respuesta inválido');
         }
 
-        // Procesar los datos para agregar análisis de métodos de pago
-        const vendedores = data.data.vendedores.map(vendedor => {
-            // Objeto para contar métodos de pago
-            const metodoPagoStats = {
-                'credit_card': { total: 0, cantidad: 0 },
-                'cash': { total: 0, cantidad: 0 },
-                'debit_card': { total: 0, cantidad: 0 },
-                'credit_note_application': { total: 0, cantidad: 0 },
-                'transfer': { total: 0, cantidad: 0 },
-                'check': { total: 0, cantidad: 0 },
-                'credit': { total: 0, cantidad: 0 },
-                'mixed': { total: 0, cantidad: 0 } // Para métodos combinados
-            };
-
-            // Debug: mostrar algunos métodos de pago para verificar el formato
-            if (vendedor.tickets && vendedor.tickets.length > 0) {
-                console.log(`📝 Primeros 3 métodos de pago para ${vendedor.nombre}:`, 
-                    vendedor.tickets.slice(0, 3).map(t => `"${t.metodoPago}"`));
-            }
-
-            // Procesar cada ticket
-            vendedor.tickets.forEach(ticket => {
-                const metodoPago = ticket.metodoPago || '';
-                const importe = parseFloat(ticket.importe) || 0;
-
-                // Verificar si es un método combinado (contiene coma)
-                if (metodoPago.includes(',')) {
-                    metodoPagoStats.mixed.total += importe;
-                    metodoPagoStats.mixed.cantidad += 1;
-                } else {
-                    // Método único - usar el valor exacto de la API
-                    const metodo = metodoPago.trim();
-                    
-                    // Mapear métodos exactos como vienen de la API
-                    if (metodo === 'credit_card') {
-                        metodoPagoStats.credit_card.total += importe;
-                        metodoPagoStats.credit_card.cantidad += 1;
-                    } else if (metodo === 'cash') {
-                        metodoPagoStats.cash.total += importe;
-                        metodoPagoStats.cash.cantidad += 1;
-                    } else if (metodo === 'debit_card') {
-                        metodoPagoStats.debit_card.total += importe;
-                        metodoPagoStats.debit_card.cantidad += 1;
-                    } else if (metodo === 'credit_note_application') {
-                        metodoPagoStats.credit_note_application.total += importe;
-                        metodoPagoStats.credit_note_application.cantidad += 1;
-                    } else if (metodo === 'transfer') {
-                        metodoPagoStats.transfer.total += importe;
-                        metodoPagoStats.transfer.cantidad += 1;
-                    } else if (metodo === 'check') {
-                        metodoPagoStats.check.total += importe;
-                        metodoPagoStats.check.cantidad += 1;
-                    } else if (metodo === 'credit') {
-                        metodoPagoStats.credit.total += importe;
-                        metodoPagoStats.credit.cantidad += 1;
-                    } else {
-                        // Si no reconocemos el método, agregarlo a mixed con información de debug
-                        console.log(`⚠️ Método de pago no reconocido: "${metodo}"`);
-                        metodoPagoStats.mixed.total += importe;
-                        metodoPagoStats.mixed.cantidad += 1;
-                    }
-                }
-            });
-
-            // Agregar estadísticas al vendedor
-            return {
-                ...vendedor,
-                metodoPagoAnalisis: metodoPagoStats
-            };
-        });
-
-        // Calcular totales generales de la respuesta original
-        const totalGeneral = data.data.totalGeneral;
-        const totalVendedores = data.data.totalVendedores;
-        const totalTickets = data.data.totalTickets;
-
-        // Calcular totales generales por método de pago
-        const totalesMetodoPago = {
+        // Procesar métodos de pago simplificado
+        const resumenMetodosPago = {
             'credit_card': { total: 0, cantidad: 0 },
             'cash': { total: 0, cantidad: 0 },
             'debit_card': { total: 0, cantidad: 0 },
@@ -123,40 +47,54 @@ export default async function handler(req, res) {
             'mixed': { total: 0, cantidad: 0 }
         };
 
-        vendedores.forEach(vendedor => {
-            Object.keys(totalesMetodoPago).forEach(metodo => {
-                totalesMetodoPago[metodo].total += vendedor.metodoPagoAnalisis[metodo].total;
-                totalesMetodoPago[metodo].cantidad += vendedor.metodoPagoAnalisis[metodo].cantidad;
-            });
+        // Procesar todos los tickets de todos los vendedores
+        data.data.vendedores.forEach(vendedor => {
+            if (vendedor.tickets && Array.isArray(vendedor.tickets)) {
+                vendedor.tickets.forEach(ticket => {
+                    const metodoPago = (ticket.metodoPago || '').trim();
+                    const importe = parseFloat(ticket.importe) || 0;
+
+                    if (metodoPago.includes(',')) {
+                        // Método combinado
+                        resumenMetodosPago.mixed.total += importe;
+                        resumenMetodosPago.mixed.cantidad += 1;
+                    } else {
+                        // Método único
+                        if (resumenMetodosPago[metodoPago]) {
+                            resumenMetodosPago[metodoPago].total += importe;
+                            resumenMetodosPago[metodoPago].cantidad += 1;
+                        } else {
+                            console.log(`⚠️ Método no reconocido: "${metodoPago}"`);
+                            resumenMetodosPago.mixed.total += importe;
+                            resumenMetodosPago.mixed.cantidad += 1;
+                        }
+                    }
+                });
+            }
         });
 
-        console.log('📊 Totales métodos de pago:', totalesMetodoPago);
-        console.log('🔍 resumenMetodosPago se incluirá en la respuesta:', !!totalesMetodoPago);
+        console.log('📊 Resumen calculado:', resumenMetodosPago);
 
-        // Preparar respuesta con datos originales + análisis
+        // Respuesta final garantizada
         const resultado = {
-            success: data.success,
+            success: true,
             data: {
-                mes: vendedores[0]?.tickets[0]?.fecha.substring(0, 7) || mes, // Extraer mes del primer ticket
-                totalGeneral: totalGeneral,
-                totalVendedores: totalVendedores,
-                totalTickets: totalTickets,
-                vendedores: vendedores,
-                resumenMetodosPago: totalesMetodoPago,
+                mes: mes,
+                totalGeneral: data.data.totalGeneral,
+                totalVendedores: data.data.totalVendedores,
+                totalTickets: data.data.totalTickets,
+                vendedores: data.data.vendedores,
+                resumenMetodosPago: resumenMetodosPago,
                 fechaConsulta: new Date().toISOString()
             }
         };
 
-        console.log('✅ Estructura final de respuesta:', {
-            success: resultado.success,
-            dataKeys: Object.keys(resultado.data),
-            tieneResumenMetodosPago: !!resultado.data.resumenMetodosPago
-        });
-
+        console.log('🚀 Enviando respuesta con resumenMetodosPago:', !!resultado.data.resumenMetodosPago);
+        
         return res.status(200).json(resultado);
 
     } catch (error) {
-        console.error('Error en proxy:', error);
+        console.error('❌ Error en proxy:', error);
         return res.status(500).json({ 
             success: false, 
             error: 'Error interno del servidor',
