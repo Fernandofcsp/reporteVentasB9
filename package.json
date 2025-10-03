@@ -1,16 +1,17 @@
 {
-  "name": "proxy-ventas-b9",
-  "version": "1.0.0",
-  "description": "Proxy para API de ventas B9 en Vercel",
-  "main": "api/ventas.js",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build needed for serverless functions'"
-  },
-  "dependencies": {
-    "node-fetch": "^2.6.7"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  }
+    "name": "reporte-ventas-proxy",
+    "version": "1.0.0",
+    "description": "Proxy para reportes de ventas B9",
+    "main": "api/ventas.js",
+    "scripts": {
+        "dev": "vercel dev",
+        "build": "echo 'No build step required'",
+        "start": "node api/ventas.js"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.7"
+    },
+    "engines": {
+        "node": ">=14.x"
+    }
 }
