@@ -33,7 +33,7 @@ export default async function handler(req, res) {
         }
 
         // Procesar los datos para agregar análisis de métodos de pago
-        const vendedores = data.data.vendedores.map(vendedor => {
+        const vendedores = data.data.map(vendedor => {
             // Objeto para contar métodos de pago
             const metodoPagoStats = {
                 'credit_card': { total: 0, cantidad: 0 },
@@ -103,6 +103,11 @@ export default async function handler(req, res) {
             };
         });
 
+        // Calcular totales generales de la respuesta original
+        const totalGeneral = vendedores.reduce((sum, v) => sum + v.totalVentas, 0);
+        const totalVendedores = vendedores.length;
+        const totalTickets = vendedores.reduce((sum, v) => sum + v.cantidadTickets, 0);
+
         // Calcular totales generales por método de pago
         const totalesMetodoPago = {
             'credit_card': { total: 0, cantidad: 0 },
@@ -128,13 +133,13 @@ export default async function handler(req, res) {
         const resultado = {
             success: data.success,
             data: {
-                mes: data.data.mes,
-                totalGeneral: data.data.totalGeneral,
-                totalVendedores: data.data.totalVendedores,
-                totalTickets: data.data.totalTickets,
+                mes: data.data[0]?.tickets[0]?.fecha.substring(0, 7) || mes, // Extraer mes del primer ticket
+                totalGeneral: totalGeneral,
+                totalVendedores: totalVendedores,
+                totalTickets: totalTickets,
                 vendedores: vendedores,
                 resumenMetodosPago: totalesMetodoPago,
-                fechaConsulta: data.data.fechaConsulta
+                fechaConsulta: new Date().toISOString()
             }
         };
 
