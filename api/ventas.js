@@ -27,13 +27,16 @@ export default async function handler(req, res) {
         }
 
         const data = await response.json();
+        console.log('🔍 Estructura de data.data:', JSON.stringify(data.data).substring(0, 200) + '...');
+        console.log('🔍 Es array data.data?', Array.isArray(data.data));
+        console.log('🔍 Propiedades de data.data:', Object.keys(data.data || {}));
         
         if (!data.success || !data.data) {
             throw new Error('Formato de respuesta inválido');
         }
 
         // Procesar los datos para agregar análisis de métodos de pago
-        const vendedores = data.data.map(vendedor => {
+        const vendedores = data.data.vendedores.map(vendedor => {
             // Objeto para contar métodos de pago
             const metodoPagoStats = {
                 'credit_card': { total: 0, cantidad: 0 },
@@ -104,9 +107,9 @@ export default async function handler(req, res) {
         });
 
         // Calcular totales generales de la respuesta original
-        const totalGeneral = vendedores.reduce((sum, v) => sum + v.totalVentas, 0);
-        const totalVendedores = vendedores.length;
-        const totalTickets = vendedores.reduce((sum, v) => sum + v.cantidadTickets, 0);
+        const totalGeneral = data.data.totalGeneral;
+        const totalVendedores = data.data.totalVendedores;
+        const totalTickets = data.data.totalTickets;
 
         // Calcular totales generales por método de pago
         const totalesMetodoPago = {
