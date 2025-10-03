@@ -33,7 +33,7 @@ export default async function handler(req, res) {
         }
 
         // Procesar los datos para agregar análisis de métodos de pago
-        const vendedores = data.data.map(vendedor => {
+        const vendedores = data.data.vendedores.map(vendedor => {
             // Objeto para contar métodos de pago
             const metodoPagoStats = {
                 'credit_card': { total: 0, cantidad: 0 },
@@ -46,6 +46,12 @@ export default async function handler(req, res) {
                 'mixed': { total: 0, cantidad: 0 } // Para métodos combinados
             };
 
+            // Debug: mostrar algunos métodos de pago para verificar el formato
+            if (vendedor.tickets && vendedor.tickets.length > 0) {
+                console.log(`📝 Primeros 3 métodos de pago para ${vendedor.nombre}:`, 
+                    vendedor.tickets.slice(0, 3).map(t => `"${t.metodoPago}"`));
+            }
+
             // Procesar cada ticket
             vendedor.tickets.forEach(ticket => {
                 const metodoPago = ticket.metodoPago || '';
@@ -56,33 +62,34 @@ export default async function handler(req, res) {
                     metodoPagoStats.mixed.total += importe;
                     metodoPagoStats.mixed.cantidad += 1;
                 } else {
-                    // Método único - normalizar el nombre
-                    const metodoNormalizado = metodoPago.toLowerCase().trim();
+                    // Método único - usar el valor exacto de la API
+                    const metodo = metodoPago.trim();
                     
-                    // Mapear métodos conocidos
-                    if (metodoNormalizado === 'credit_card') {
+                    // Mapear métodos exactos como vienen de la API
+                    if (metodo === 'credit_card') {
                         metodoPagoStats.credit_card.total += importe;
                         metodoPagoStats.credit_card.cantidad += 1;
-                    } else if (metodoNormalizado === 'cash') {
+                    } else if (metodo === 'cash') {
                         metodoPagoStats.cash.total += importe;
                         metodoPagoStats.cash.cantidad += 1;
-                    } else if (metodoNormalizado === 'debit_card') {
+                    } else if (metodo === 'debit_card') {
                         metodoPagoStats.debit_card.total += importe;
                         metodoPagoStats.debit_card.cantidad += 1;
-                    } else if (metodoNormalizado === 'credit_note_application') {
+                    } else if (metodo === 'credit_note_application') {
                         metodoPagoStats.credit_note_application.total += importe;
                         metodoPagoStats.credit_note_application.cantidad += 1;
-                    } else if (metodoNormalizado === 'transfer') {
+                    } else if (metodo === 'transfer') {
                         metodoPagoStats.transfer.total += importe;
                         metodoPagoStats.transfer.cantidad += 1;
-                    } else if (metodoNormalizado === 'check') {
+                    } else if (metodo === 'check') {
                         metodoPagoStats.check.total += importe;
                         metodoPagoStats.check.cantidad += 1;
-                    } else if (metodoNormalizado === 'credit') {
+                    } else if (metodo === 'credit') {
                         metodoPagoStats.credit.total += importe;
                         metodoPagoStats.credit.cantidad += 1;
                     } else {
-                        // Si no reconocemos el método, agregarlo a mixed
+                        // Si no reconocemos el método, agregarlo a mixed con información de debug
+                        console.log(`⚠️ Método de pago no reconocido: "${metodo}"`);
                         metodoPagoStats.mixed.total += importe;
                         metodoPagoStats.mixed.cantidad += 1;
                     }
