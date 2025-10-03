@@ -131,12 +131,13 @@ export default async function handler(req, res) {
         });
 
         console.log('📊 Totales métodos de pago:', totalesMetodoPago);
+        console.log('🔍 resumenMetodosPago se incluirá en la respuesta:', !!totalesMetodoPago);
 
         // Preparar respuesta con datos originales + análisis
         const resultado = {
             success: data.success,
             data: {
-                mes: data.data[0]?.tickets[0]?.fecha.substring(0, 7) || mes, // Extraer mes del primer ticket
+                mes: vendedores[0]?.tickets[0]?.fecha.substring(0, 7) || mes, // Extraer mes del primer ticket
                 totalGeneral: totalGeneral,
                 totalVendedores: totalVendedores,
                 totalTickets: totalTickets,
@@ -145,6 +146,12 @@ export default async function handler(req, res) {
                 fechaConsulta: new Date().toISOString()
             }
         };
+
+        console.log('✅ Estructura final de respuesta:', {
+            success: resultado.success,
+            dataKeys: Object.keys(resultado.data),
+            tieneResumenMetodosPago: !!resultado.data.resumenMetodosPago
+        });
 
         return res.status(200).json(resultado);
 
