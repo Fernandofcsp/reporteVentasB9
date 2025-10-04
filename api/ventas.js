@@ -18,22 +18,24 @@ export default async function handler(req, res) {
             });
         }
 
-        // Llamar a la API original
+        // Llamar a la API original de vendedores
         const apiUrl = `https://back-back9.realvirtual.com.mx/ventas-vendedores/?empresa=1&fecha_desde=${mes}-01&fecha_hasta=${mes}-30`;
-        console.log('🔗 Llamando a API:', apiUrl);
+        console.log('🔗 Llamando a API vendedores:', apiUrl);
         
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
-            throw new Error(`Error API: ${response.status}`);
+            throw new Error(`Error API vendedores: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('✅ Datos recibidos de API original');
+
+        console.log('✅ Datos recibidos de API vendedores');
+        console.log('🔍 Total de API original:', data.total);
         console.log('🔍 Estructura de data.data:', Object.keys(data.data || {}));
         console.log('🔍 Campos disponibles para total:', {
             totalGeneral: data.data.totalGeneral,
-            total: data.data.total,
+            totalApiOriginal: data.total,
             totalExacto: data.data.totalExacto,
             totalVentas: data.data.totalVentas
         });
@@ -83,12 +85,15 @@ export default async function handler(req, res) {
         console.log('📊 Resumen calculado:', resumenMetodosPago);
 
         // Respuesta final garantizada
+        const totalGeneral = data.total || data.data.totalGeneral; // Usar el campo "total" de la API original
+        const totalExacto = data.total || data.data.totalGeneral; // Usar el campo "total" de la API original
+        
         const resultado = {
             success: true,
             data: {
                 mes: mes,
-                totalGeneral: data.data.totalGeneral,
-                totalExacto: data.data.totalExacto || data.data.total || data.data.totalVentas || data.data.totalGeneral, // Obtener de la API original
+                totalGeneral: totalGeneral,
+                totalExacto: totalExacto, // Usar el "total" de la API original
                 totalVendedores: data.data.totalVendedores,
                 totalTickets: data.data.totalTickets,
                 vendedores: data.data.vendedores,
