@@ -30,6 +30,13 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         console.log('✅ Datos recibidos de API original');
+        console.log('🔍 Estructura de data.data:', Object.keys(data.data || {}));
+        console.log('🔍 Campos disponibles para total:', {
+            totalGeneral: data.data.totalGeneral,
+            total: data.data.total,
+            totalExacto: data.data.totalExacto,
+            totalVentas: data.data.totalVentas
+        });
         
         if (!data.success || !data.data || !data.data.vendedores) {
             throw new Error('Formato de respuesta inválido');
@@ -81,7 +88,7 @@ export default async function handler(req, res) {
             data: {
                 mes: mes,
                 totalGeneral: data.data.totalGeneral,
-                totalExacto: data.data.total, // Incluir el total exacto de la API original
+                totalExacto: data.data.totalExacto || data.data.total || data.data.totalVentas || data.data.totalGeneral, // Obtener de la API original
                 totalVendedores: data.data.totalVendedores,
                 totalTickets: data.data.totalTickets,
                 vendedores: data.data.vendedores,
