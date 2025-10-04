@@ -4,9 +4,7 @@
     "description": "Proxy para reportes de ventas B9",
     "main": "api/ventas.js",
     "scripts": {
-        "dev": "vercel dev",
-        "build": "echo 'No build step required'",
-        "start": "node api/ventas.js"
+        "build": "echo 'No build step required'"
     },
     "dependencies": {
         "node-fetch": "^2.6.7"
