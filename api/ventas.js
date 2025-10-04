@@ -81,6 +81,7 @@ export default async function handler(req, res) {
             data: {
                 mes: mes,
                 totalGeneral: data.data.totalGeneral,
+                totalExacto: data.data.total, // Incluir el total exacto de la API original
                 totalVendedores: data.data.totalVendedores,
                 totalTickets: data.data.totalTickets,
                 vendedores: data.data.vendedores,
