@@ -2,9 +2,11 @@
     "name": "reporte-ventas-proxy",
     "version": "1.0.0",
     "description": "Proxy para reportes de ventas B9",
-    "main": "api/ventas.js",
+    "main": "index.js",
     "scripts": {
-        "build": "echo 'No build step required'"
+        "start": "node index.js",
+        "build": "echo 'No build step required'",
+        "dev": "node index.js"
     },
     "dependencies": {
         "node-fetch": "^2.6.7"
