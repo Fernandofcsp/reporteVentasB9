@@ -1,10 +1,17 @@
 {
     "version": 2,
     "functions": {
-        "api/ventas.js": {
+        "api/**/*.js": {
+            "runtime": "nodejs18.x",
             "maxDuration": 30
         }
     },
+    "routes": [
+        {
+            "src": "/api/ventas",
+            "dest": "/api/ventas.js"
+        }
+    ],
     "headers": [
         {
             "source": "/api/(.*)",

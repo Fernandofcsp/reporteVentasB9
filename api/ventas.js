@@ -50,4 +50,4 @@ async function handler(req, res) {
     }
 }
 
-module.exports = { default: handler };
+module.exports = handler;
