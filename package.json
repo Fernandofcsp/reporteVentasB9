@@ -9,6 +9,7 @@
         "dev": "node index.js"
     },
     "dependencies": {
+        "express": "^5.1.0",
         "node-fetch": "^2.6.7"
     },
     "engines": {

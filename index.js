@@ -1,24 +1,21 @@
-const http = require('http');
-const url = require('url');
+const express = require('express');
+const app = express();
 
-const server = http.createServer((req, res) => {
-    const parsedUrl = url.parse(req.url, true);
-    
-    // Configurar CORS
+// Middleware para CORS
+app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
     if (req.method === 'OPTIONS') {
-        res.writeHead(200);
-        res.end();
-        return;
+        return res.status(200).end();
     }
-    
-    // Página de documentación de la API
-    if (parsedUrl.pathname === '/' || parsedUrl.pathname === '/index.js') {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(`
+    next();
+});
+
+// Página de documentación de la API
+app.get('/', (req, res) => {
+    res.send(`
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -69,29 +66,26 @@ const server = http.createServer((req, res) => {
     <p><small>Desarrollado para reportes de ventas B9 | Vercel Deployment</small></p>
 </body>
 </html>
-        `);
-        return;
-    }
-    
-    // Redireccionar requests de API a la función serverless
-    if (parsedUrl.pathname.startsWith('/api/')) {
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            error: 'Endpoint no encontrado',
-            message: 'Esta es la página de inicio. La API está en /api/ventas',
-            availableEndpoints: ['/api/ventas?mes=YYYY-MM']
-        }));
-        return;
-    }
-    
-    // 404 para otras rutas
-    res.writeHead(404, { 'Content-Type': 'text/html' });
-    res.end('<h1>404 - Página no encontrada</h1><p><a href="/">Volver al inicio</a></p>');
+    `);
+});
+
+// Redirección para requests de API que lleguen aquí por error
+app.get('/api/*', (req, res) => {
+    res.status(404).json({
+        error: 'Endpoint no encontrado',
+        message: 'Esta es la página de inicio. La API está en /api/ventas',
+        availableEndpoints: ['/api/ventas?mes=YYYY-MM']
+    });
+});
+
+// 404 para otras rutas
+app.get('*', (req, res) => {
+    res.status(404).send('<h1>404 - Página no encontrada</h1><p><a href="/">Volver al inicio</a></p>');
 });
 
 const port = process.env.PORT || 3000;
-server.listen(port, () => {
-    console.log(`🚀 Servidor ejecutándose en puerto ${port}`);
+app.listen(port, () => {
+    console.log(`🚀 Servidor Express ejecutándose en puerto ${port}`);
 });
 
-module.exports = server;
+module.exports = app;
